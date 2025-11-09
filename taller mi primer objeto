@@ -1,1 +1,234 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+using namespace std;
 
+//====== clase habitacion  ====
+
+
+class Habitacion {
+private:
+	string numero;
+	string tipo;
+	int precioN;
+	bool disponible;
+
+public:
+	//construtor
+	Habitacion(string n, string t, int p)
+		: numero(n), tipo(t), precioN(p), disponible(true) {}
+
+	// Getters
+
+	string getNumero() const {
+		return numero;
+	}
+	string getTipo() const {
+		return tipo;
+	}
+	int getPrecioN() const {
+		return precioN;
+	}
+	bool estaDisponible() const {
+		return disponible;
+	}
+
+	//metodo para cambio de estado
+
+	void ocupada() {
+		disponible = false;
+	}
+	void libre() {
+		disponible = true;
+	}
+
+
+	void mostrarInfo() const {
+		cout << "Numero de habitacion: " << numero << endl;
+		cout << "tipo de habitacion " << tipo << endl;
+		cout << "precio por noche: " << precioN << endl;
+		cout << "Estado: " << (disponible ? "Disponible" : "ocupada") << endl;
+	}
+
+};
+
+
+class Reserva {
+private:
+	string cliente;
+	string fechaIngreso;
+	string fechaSalida;
+	Habitacion habitacion;
+
+public:
+	//construtor
+	Reserva(string c, string fi, string fs, Habitacion h): cliente(c), fechaIngreso(fi), fechaSalida(fs),habitacion(h) {}
+
+	string getCliente() const {
+		return cliente;
+	}
+	string getFechaingreso() const {
+		return fechaIngreso;
+	}
+	string getFechasalida()  const {
+		return fechaSalida;
+	}
+	Habitacion getHabitacion() const {
+		return habitacion;
+	}
+
+	void mostrarInfo() const {
+		cout << "  Informacion de la Reserva " << endl;
+		cout << "Cliente: " << cliente << endl;
+		cout << "Fecha de llegada: " << fechaIngreso << endl;
+		cout << "Fecha de salida: " << fechaSalida << endl;
+		cout << " Detalles de la habitacion " << endl;
+		habitacion.mostrarInfo();
+		cout << endl;
+	}
+
+};
+
+
+class Cliente {
+private:
+	string nombre;
+	string telefono;
+	string email;
+	vector<Reserva> reservas;
+public:
+	//metodo constructor
+	Cliente(string n, string t, string e): nombre(n), telefono(t), email(e) {}
+
+	// Getters
+	string getNombre() const {
+		return nombre;
+	}
+	string getEmail() const {
+		return email;
+	}
+	string getTelefono() const {
+		return telefono;
+	}
+
+
+	void crearReserva(string llegada, string salida, Habitacion& hab) {
+		if (!hab.estaDisponible()) {
+			cout << " habitacion: " << hab.getNumero() << " no esta disponible." << endl;
+			return;
+		}
+
+		hab.ocupada(); // Marcar habitaciC3n como ocupada
+		Reserva nueva(nombre, llegada, salida, hab);
+		reservas.push_back(nueva);
+
+		cout << "reserva creada exitosamente para " << nombre << endl;
+	}
+
+
+	void cancelarReserva(string numeroHabitacion) {
+		bool encontrada = false;
+
+		for (auto it = reservas.begin(); it != reservas.end(); ++it) {
+			if (it->getHabitacion().getNumero() == numeroHabitacion) {
+				encontrada = true;
+				cout << "  Reserva de la habitaciC3n " << numeroHabitacion << " cancelada." << endl;
+				reservas.erase(it);
+				break;
+			}
+		}
+
+		if (!encontrada)
+			cout << "No se encontro una reserva para la habitacion " << numeroHabitacion << endl;
+	}
+
+
+	void mostrarReservas() const {
+		cout << "\n Reservas de " << nombre << " " << endl;
+		if (reservas.empty()) {
+			cout << "No hay reservas registradas." << endl;
+			return;
+		}
+
+		for (const auto& r : reservas)
+			r.mostrarInfo();
+	}
+};
+
+class Hotel {
+    private:
+        string nombre;
+        vector<Habitacion> habitaciones;
+        vector<Cliente> clientes;
+    
+    public:
+        Hotel(string n) : nombre(n) {}
+    
+        void agregarHabitacion(const Habitacion& h) {
+            habitaciones.push_back(h);
+        }
+    
+        void agregarCliente(const Cliente& c) {
+            clientes.push_back(c);
+        }
+    
+        Habitacion* buscarHabitacion(string numero) {
+            for (auto& h : habitaciones) {
+                if (h.getNumero() == numero) return &h;
+            }
+            return nullptr;
+        }
+    
+        Cliente* buscarCliente(string nombre) {
+            for (auto& c : clientes) {
+                if (c.getNombre() == nombre) return &c;
+            }
+            return nullptr;
+        }
+    
+        void mostrarHabitaciones() const {
+            cout << " Habitaciones del hotel " << nombre << " \n";
+            for (const auto& h : habitaciones) {
+                h.mostrarInfo();
+            }
+        }
+    
+        void mostrarClientes() const {
+            cout << " Clientes del hotel " << nombre << " \n";
+            for (const auto& c : clientes) {
+                cout << "- " << c.getNombre() << "  Email: " << c.getEmail() << "  Tel: " << c.getTelefono() << endl;
+            }
+        }
+};
+
+
+int main()
+{
+	Hotel hotel("JKHotel");
+
+    
+    hotel.agregarHabitacion(Habitacion("101", "Doble", 120000));
+    hotel.agregarHabitacion(Habitacion("102", "Suite", 255000));
+
+   
+    hotel.agregarCliente(Cliente("Pedro Perez", "1234568", "chango.gmail.com"));
+    hotel.agregarCliente(Cliente("Sara Toro", "9876544", "sarita@gmail.com"));
+
+    hotel.mostrarHabitaciones();
+    hotel.mostrarClientes();
+
+    // Buscar cliente y habitación
+    Cliente* c = hotel.buscarCliente("Sara Toro");
+    Habitacion* h = hotel.buscarHabitacion("101");
+    if (c && h) {
+        c->crearReserva("2025-11-10", "2025-11-12", *h);
+    }
+
+    hotel.mostrarHabitaciones();
+    c->mostrarReservas();
+
+}
